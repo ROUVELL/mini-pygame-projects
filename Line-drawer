@@ -20,7 +20,7 @@ class Point:
         pg.draw.circle(sc, 'grey', self.pos, 3)
 
 
-cache = {}
+cache = []
 t = 0
 while t <= 1:
     T = 1 - t
@@ -28,12 +28,12 @@ while t <= 1:
     triple_T = 3 * T
     quadro_t = t * t
 
-    cache[t] = (
-        quadro_T * T,
-        3 * quadro_T * t,
-        triple_T * quadro_t,
-        quadro_t * t
-    )
+    A = quadro_T * T
+    B = 3 * quadro_T * t
+    C = triple_T * quadro_t
+    D = quadro_t * t
+
+    cache.append((A, B, C, D))
 
     t += .04
 
@@ -52,16 +52,11 @@ class Line:
         p2 = pg.Vector2(half_x, p1.y)
         p3 = pg.Vector2(half_x, p4.y)
 
-        t = 0
-        while t <= 1:
-            A, B, C, D = cache[t]
-
+        for A, B, C, D in cache:
             x = int(A * p1.x + B * p2.x + C * p3.x + D * p4.x)
             y = int(A * p1.y + B * p2.y + C * p3.y + D * p4.y)
-
             self.points.append((x, y))
 
-            t += .04
         self.points.append((p4.x, p4.y))
 
     def update(self):

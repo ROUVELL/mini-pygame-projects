@@ -64,7 +64,7 @@ class Line:
             self._get_points()
 
     def draw(self, sc: pg.Surface):
-        pg.draw.aalines(sc, 'green', False, self.points, 0)
+        pg.draw.aalines(sc, 'green', False, self.points)
         self.p1.draw(sc)
         self.p2.draw(sc)
 

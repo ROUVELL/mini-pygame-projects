@@ -1,0 +1,128 @@
+import pygame as pg
+
+
+class Point:
+    def __init__(self, x=600, y=900):
+        self.pos = pg.Vector2(x, y)
+
+        self.rect = pg.Rect(0, 0, 20, 20)
+        self.rect.center = (x, y)
+
+    def check_moving(self):
+        mpos = pg.mouse.get_pos()
+        if self.rect.collidepoint(mpos):
+            self.pos = pg.Vector2(mpos)
+            self.rect.center = mpos
+            return True
+        return False
+
+    def draw(self, sc: pg.Surface):
+        pg.draw.circle(sc, 'grey', self.pos, 3)
+
+
+cache = {}
+t = 0
+while t <= 1:
+    T = 1 - t
+    quadro_T = T * T
+    triple_T = 3 * T
+    quadro_t = t * t
+
+    cache[t] = (
+        quadro_T * T,
+        3 * quadro_T * t,
+        triple_T * quadro_t,
+        quadro_t * t
+    )
+
+    t += .04
+
+
+class Line:
+    def __init__(self, p1: Point, p2: Point):
+        self.points = []
+        self.p1, self.p2 = p1, p2
+        self._get_points()
+
+    def _get_points(self):
+        self.points.clear()
+
+        p1, p4 = self.p1.pos, self.p2.pos
+        half_x = p1.x + (p4.x - p1.x) // 2
+        p2 = pg.Vector2(half_x, p1.y)
+        p3 = pg.Vector2(half_x, p4.y)
+
+        t = 0
+        while t <= 1:
+            A, B, C, D = cache[t]
+
+            x = int(A * p1.x + B * p2.x + C * p3.x + D * p4.x)
+            y = int(A * p1.y + B * p2.y + C * p3.y + D * p4.y)
+
+            self.points.append((x, y))
+
+            t += .04
+        self.points.append((p4.x, p4.y))
+
+    def update(self):
+        if self.p1.check_moving() or self.p2.check_moving():
+            self._get_points()
+
+    def draw(self, sc: pg.Surface):
+        pg.draw.aalines(sc, 'green', False, self.points)
+        self.p1.draw(sc)
+        self.p2.draw(sc)
+
+
+class Renderer:
+    def __init__(self, app):
+        self.lines = [Line(Point(100, 450), Point(300, 800)),
+                      Line(Point(100, 450), Point(300, 700)),
+                      Line(Point(100, 450), Point(300, 600)),
+                      Line(Point(100, 450), Point(300, 500)),
+                      Line(Point(100, 450), Point(300, 400)),
+                      Line(Point(100, 450), Point(300, 300)),
+                      Line(Point(100, 450), Point(300, 200)),
+
+                      Line(Point(300, 500), Point(500, 300)),
+                      Line(Point(300, 500), Point(500, 400)),
+                      Line(Point(300, 500), Point(500, 500)),
+                      Line(Point(300, 500), Point(500, 600)),
+                      Line(Point(300, 500), Point(500, 700))]
+
+    def __call__(self, sc: pg.Surface, *args, **kwargs):
+        for line in self.lines:
+            if pg.mouse.get_pressed()[1]:
+                line.update()
+            line.draw(sc)
+
+
+class App:
+    def __init__(self):
+        pg.init()
+        pg.event.clear()
+        pg.event.set_blocked(None)
+        pg.event.set_allowed(pg.KEYUP)
+        self.sc = pg.display.set_mode((1200, 900))
+        self.clock = pg.time.Clock()
+
+        self.render = Renderer(self)
+
+    def run(self):
+        while True:
+            self.clock.tick(0)
+            for event in pg.event.get():
+                if event.key == pg.K_ESCAPE:
+                    exit()
+
+            self.sc.fill('black')
+
+            self.render(self.sc)
+
+            pg.display.set_caption(f'{self.clock.get_fps(): .1f}')
+            pg.display.flip()
+
+
+if __name__ == '__main__':
+    app = App()
+    app.run()
